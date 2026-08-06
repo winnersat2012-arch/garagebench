@@ -79,7 +79,7 @@ GarageBench
 ├── CONTRIBUTING.md    Contribution instructions
 ├── ROADMAP.md         Planned development phases
 └── SECURITY.md        Security policy and practices
-
+```
 
 ## Technology stack
 
