@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { environment } from '../environments/environment';
 
 type AssistResponse = {
@@ -42,6 +42,7 @@ type AssistResponse = {
         padding: 8px 12px;
         border-radius: 8px;
         cursor: pointer;
+        margin-top: 8px;
       }
       input,
       textarea {
@@ -58,60 +59,71 @@ type AssistResponse = {
   template: `
     <h1>GarageBench — MVP</h1>
     <section class="panel">
-      <h2>1) Crear vehículo</h2>
+      <h2>1) Create vehicle</h2>
       <label>VIN</label>
       <input [(ngModel)]="vehicle.vin" />
-      <label>Marca</label>
+      <label>Make</label>
       <input [(ngModel)]="vehicle.make" />
-      <label>Modelo</label>
+      <label>Model</label>
       <input [(ngModel)]="vehicle.model" />
-      <label>Año</label>
+      <label>Year</label>
       <input type="number" [(ngModel)]="vehicle.year" />
-      <button (click)="createVehicle()">Crear vehículo</button>
+      <button (click)="createVehicle()">Create vehicle</button>
     </section>
 
     <section class="panel">
-      <h2>2) Crear expediente</h2>
-      <label>ID vehículo</label>
+      <h2>2) Create case</h2>
+      <label>Vehicle ID</label>
       <input [(ngModel)]="casePayload.vehicleId" />
-      <label>Número de expediente</label>
+      <label>Case number</label>
       <input [(ngModel)]="casePayload.caseNumber" />
-      <label>Descripción/avería</label>
+      <label>Complaint</label>
       <textarea rows="3" [(ngModel)]="casePayload.complaint"></textarea>
-      <button (click)="createCase()">Crear expediente</button>
+      <button (click)="createCase()">Create case</button>
     </section>
 
     <section class="panel" *ngIf="caseId">
-      <h2>3) Añadir información</h2>
+      <h2>3) Add information</h2>
       <div>
-        <label>Síntoma</label>
+        <label>Symptom</label>
         <input [(ngModel)]="symptom.description" />
-        <button (click)="addSymptom()">Añadir síntoma</button>
+        <button (click)="addSymptom()">Add symptom</button>
       </div>
       <div>
         <label>DTC</label>
         <input [(ngModel)]="dtc.code" />
-        <button (click)="addDtc()">Añadir DTC</button>
+        <button (click)="addDtc()">Add DTC</button>
+      </div>
+      <div>
+        <label>Measurement (name)</label>
+        <input [(ngModel)]="measurement.name" />
+        <label>Value</label>
+        <input type="number" [(ngModel)]="measurement.value" />
+        <label>Unit</label>
+        <input [(ngModel)]="measurement.unit" />
+        <label>Note</label>
+        <input [(ngModel)]="measurement.note" />
+        <button (click)="addMeasurement()">Add measurement</button>
       </div>
     </section>
 
     <section class="panel" *ngIf="caseId">
-      <h2>4) Copiloto de diagnóstico</h2>
-      <button (click)="requestAssist()">Solicitar orientación</button>
+      <h2>4) Assistant</h2>
+      <button (click)="requestAssist()">Ask assistant</button>
       <pre *ngIf="assist">{{ assist | json }}</pre>
     </section>
 
     <section class="panel" *ngIf="caseId">
-      <h2>5) Registrar prueba</h2>
-      <label>Nombre de prueba</label>
+      <h2>5) Register test</h2>
+      <label>Test name</label>
       <input [(ngModel)]="test.name" />
-      <label>Resultado esperado</label>
+      <label>Expected result</label>
       <input [(ngModel)]="test.expectedResult" />
-      <label>Resultado obtenido</label>
+      <label>Actual result</label>
       <input [(ngModel)]="test.actualResult" />
-      <label>Estado</label>
+      <label>Status</label>
       <input [(ngModel)]="test.status" />
-      <button (click)="addTest()">Registrar prueba</button>
+      <button (click)="addTest()">Register test</button>
     </section>
   `,
 })
@@ -124,6 +136,7 @@ export class AppComponent {
   };
   symptom = { description: '', frequency: 'frequent', context: '' };
   dtc = { code: '', description: '' };
+  measurement = { name: '', value: 0, unit: '', note: '' };
   test = {
     name: '',
     expectedResult: '',
@@ -164,6 +177,17 @@ export class AppComponent {
     if (!this.caseId) return;
     this.http
       .post(`${environment.apiBaseUrl}/cases/${this.caseId}/dtcs`, this.dtc)
+      .subscribe();
+  }
+
+  addMeasurement() {
+    if (!this.caseId) return;
+    const payload = {
+      ...this.measurement,
+      value: Number(this.measurement.value),
+    };
+    this.http
+      .post(`${environment.apiBaseUrl}/cases/${this.caseId}/measurements`, payload)
       .subscribe();
   }
 
