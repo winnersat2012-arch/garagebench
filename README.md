@@ -141,6 +141,31 @@ git push origin v0.1.0
 
 That publishes the new `.exe` in the release assets.
 
+## Troubleshooting
+
+If you see errors like `SyntaxError: Unexpected token ??` (for example from `electron` or `tsc`), you are using an old Node.js version.
+
+Required: **Node.js 20+**.
+
+Run these commands on **separate lines**:
+
+```bash
+node -v
+npm -v
+npm cache clean --force
+npm install
+npm run bootstrap
+npm run build:all
+npm run desktop:pack
+```
+
+Also avoid concatenating commands in one line, for example:
+
+- `npx ng --versionnpm run build:all`
+- `npm run desktop:packnpm`
+
+Run one command per line.
+
 ## Contributing & branch flow
 
 - Use `feature/initial-platform` for changes.
