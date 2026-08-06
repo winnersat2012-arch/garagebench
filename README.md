@@ -60,6 +60,16 @@ El instalador se guarda en `release/`.
 - Abre el instalador de `release/` y ejecuta la app instalada.
 - Al abrir, el cliente usa la versión compilada del frontend y backend incluido en el paquete.
 
+## Descargar e instalar directamente (sin compilar)
+
+La forma recomendada para "probar rápido" sin entorno técnico:
+
+1. Entra al apartado de **Releases** del repositorio.
+2. Descarga el archivo `.exe` más reciente (por ejemplo: `GarageBench Setup ... .exe`).
+3. Ejecuta el instalador y abre `GarageBench`.
+
+Cuando quieras publicar una nueva versión, al hacer `git tag vX.Y.Z` y pushear ese tag, el workflow de GitHub subirá automáticamente el `.exe` nuevo a Releases.
+
 ## Rama de trabajo
 
 La rama recomendada para cambios es `feature/initial-platform` (no se edita `main` directamente).
