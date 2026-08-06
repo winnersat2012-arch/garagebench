@@ -1,0 +1,19 @@
+{
+  "name": "garagebench",
+  "private": true,
+  "version": "0.1.0",
+  "description": "GarageBench MVP for assisted automotive diagnostics",
+  "license": "AGPL-3.0-or-later",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "bootstrap": "npm --prefix backend install && npm --prefix frontend install",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build",
+    "start": "npm --prefix backend run start:dev",
+    "start:all": "concurrently \"npm --prefix backend run start:dev\" \"npm --prefix frontend run start\"",
+    "test": "npm --prefix backend run test && npm --prefix frontend run test",
+    "lint": "npm --prefix backend run lint && npm --prefix frontend run lint"
+  }
+}
