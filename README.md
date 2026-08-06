@@ -79,3 +79,133 @@ GarageBench
 ├── CONTRIBUTING.md    Contribution instructions
 ├── ROADMAP.md         Planned development phases
 └── SECURITY.md        Security policy and practices
+
+
+## Technology stack
+
+- **Frontend:** Angular 17
+- **Backend:** NestJS 10 and TypeScript
+- **Database:** PostgreSQL 16 and TypeORM
+- **AI providers:** mock adapter by default, with OpenAI and Ollama integration points
+- **Development:** Node.js, npm and Docker Compose
+
+## Quick start
+
+### Requirements
+
+- Node.js 18 or newer
+- npm
+- Docker and Docker Compose
+- Git
+
+### Installation
+
+```bash
+git clone https://github.com/winnersat2012-arch/garagebench.git
+cd garagebench
+
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+
+docker compose up -d
+npm install
+npm run bootstrap
+npm run start:all
+```
+
+The frontend starts on `http://localhost:4200` and the backend uses port `3000` by default.
+
+The backend health endpoint is available at:
+
+```text
+GET http://localhost:3000/health
+```
+
+### Development without an AI key
+
+The default provider is the local mock adapter:
+
+```env
+AI_PROVIDER=mock
+```
+
+This allows contributors to build, test and review the diagnostic workflow without sending information to an external AI provider.
+
+### OpenAI configuration
+
+Keep all credentials outside version control:
+
+```env
+AI_PROVIDER=openai
+OPENAI_API_KEY=your_key_here
+OPENAI_MODEL=your_supported_model
+```
+
+Never commit `.env` files, API keys, customer information or full vehicle identification numbers.
+
+## Project commands
+
+```bash
+npm run bootstrap   # Install backend and frontend dependencies
+npm run start:all   # Run backend and frontend in development mode
+npm run build       # Build both applications
+npm run test        # Run the available test suites
+npm run lint        # Run project linters
+```
+
+## Responsible AI principles
+
+GarageBench is designed around several non-negotiable rules:
+
+- AI-generated output is assistance, not a confirmed diagnosis.
+- Technical certainty must be supported by recorded evidence.
+- Missing information and uncertainty must remain visible.
+- Recommended tests should reduce uncertainty rather than merely repeat a hypothesis.
+- Safety-critical work must follow verified procedures and competent professional review.
+- Proprietary manuals must not be copied into the repository without permission.
+
+## Security and privacy
+
+The project is intended to handle potentially sensitive workshop information. Contributors must:
+
+- Store secrets only in environment variables or a dedicated secrets manager.
+- Avoid committing personal data, customer records or complete VINs.
+- Validate file uploads and external content before processing.
+- Review authentication, authorisation and tenant isolation before production use.
+- Report suspected vulnerabilities according to [SECURITY.md](SECURITY.md).
+
+## Roadmap
+
+### Phase 1
+
+- User and workshop authentication.
+- Complete evidence provenance for every diagnostic step.
+- Database-backed end-to-end tests in CI.
+- Improved validation and error handling.
+
+### Phase 2
+
+- Production-ready OpenAI and Ollama adapters.
+- Legally sourced RAG for workshop-provided technical documents.
+- Diagnostic history and case comparison.
+- Expanded privacy, permissions and audit controls.
+
+See [ROADMAP.md](ROADMAP.md) for the maintained roadmap.
+
+## Contributing
+
+Contributions are welcome, including documentation, testing, accessibility, security review, frontend improvements and diagnostic-domain modelling.
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. New contributors can begin with a small issue, include tests where appropriate and explain how their change preserves evidence traceability.
+
+## Project status and adoption
+
+GarageBench was publicly released as an early MVP in August 2026. The project is currently focused on establishing a stable technical foundation and validating workflows derived from real independent repair-shop needs. No unverified claims about users, downloads or production adoption are made.
+
+## Maintainer
+
+GarageBench is maintained by **Aitor Torre Martínez** through the GitHub account [`winnersat2012-arch`](https://github.com/winnersat2012-arch).
+
+## License
+
+GarageBench is licensed under the **GNU Affero General Public License v3.0 or later**. See [LICENSE](LICENSE) for the complete terms.
