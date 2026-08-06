@@ -1,0 +1,7 @@
+export enum EvidenceKind {
+  DECLARED = 'DECLARED',
+  OBSERVED = 'OBSERVED',
+  MEASURED = 'MEASURED',
+  RETRIEVED = 'RETRIEVED',
+  INFERRED = 'INFERRED',
+}
