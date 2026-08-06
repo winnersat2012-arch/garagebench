@@ -1,4 +1,4 @@
-# GarageBench
+﻿# GarageBench
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 ![Project status](https://img.shields.io/badge/status-early%20MVP-orange)
@@ -10,10 +10,10 @@ GarageBench is a small, open-source pilot for assisted automotive diagnostics.
 
 It is built as a monorepo with:
 
-- `backend/` → NestJS API
-- `frontend/` → Angular app
-- `electron/` → desktop wrapper and app launcher
-- `docker-compose.yml` → PostgreSQL for local development
+- `backend/` -> NestJS API
+- `frontend/` -> Angular app
+- `electron/` -> desktop wrapper and app launcher
+- `docker-compose.yml` -> PostgreSQL for local development
 
 This project includes a first MVP workflow:
 
@@ -180,4 +180,3 @@ See `CONTRIBUTING.md`, `AGENTS.md`, and `SECURITY.md`.
 ## License
 
 AGPL-3.0-or-later
-

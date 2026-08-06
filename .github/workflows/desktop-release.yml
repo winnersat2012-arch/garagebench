@@ -12,8 +12,6 @@ permissions:
 jobs:
   build-installer-windows:
     runs-on: windows-latest
-    env:
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: "true"
     defaults:
       run:
         shell: pwsh
@@ -26,8 +24,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
-      - name: Instalar dependencias raíz
+      - name: Instalar dependencias de root
         run: npm install
 
       - name: Instalar dependencias de frontend y backend
