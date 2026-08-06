@@ -6,6 +6,7 @@ import { CreateDiagnosticCaseDto } from '../dto/create-diagnostic-case.dto';
 import { CreateDtcDto } from '../dto/create-dtc.dto';
 import { CreateSymptomDto } from '../dto/create-symptom.dto';
 import { CreateTestDto } from '../dto/create-test.dto';
+import { CreateMeasurementDto } from '../dto/create-measurement.dto';
 import { CreateVehicleDto } from '../dto/create-vehicle.dto';
 import { EvidenceKind } from '../entities/evidence-kind.enum';
 import { DiagnosticCase } from '../entities/diagnostic-case.entity';
@@ -95,6 +96,31 @@ export class DiagnosticsService {
     return dtc;
   }
 
+  async addMeasurement(caseId: string, dto: CreateMeasurementDto) {
+    const dc = await this.caseRepo.findOne({ where: { id: caseId } });
+    if (!dc) throw new NotFoundException('Diagnostic case not found');
+
+    const created = await this.measurementRepo.save(
+      this.measurementRepo.create({
+        ...dto,
+        case: dc,
+      }),
+    );
+
+    await this.evidenceRepo.save(
+      this.evidenceRepo.create({
+        case: dc,
+        kind: EvidenceKind.MEASURED,
+        key: `measurement:${dto.name}`,
+        value: `${dto.name}: ${dto.value} ${dto.unit}`,
+        confidence: 0.9,
+        source: 'technician',
+      }),
+    );
+
+    return created;
+  }
+
   async addTest(caseId: string, dto: CreateTestDto) {
     const dc = await this.caseRepo.findOne({ where: { id: caseId } });
     if (!dc) throw new NotFoundException('Diagnostic case not found');
@@ -133,6 +159,7 @@ export class DiagnosticsService {
         symptoms: true,
         dtcCodes: true,
         diagnosticTests: true,
+        measurements: true,
         evidences: true,
         hypotheses: true,
       },
