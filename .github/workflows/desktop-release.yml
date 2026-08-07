@@ -1,4 +1,4 @@
-name: Build Windows Installer
+ï»¿name: Build Windows Installer
 
 on:
   workflow_dispatch:
@@ -26,8 +26,8 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Instalar dependencias raíz
-        run: npm ci
+      - name: Instalar dependencias de root
+        run: npm install
 
       - name: Instalar dependencias de frontend y backend
         run: npm run bootstrap

@@ -1,4 +1,4 @@
-﻿# GarageBench
+# GarageBench
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 ![Project status](https://img.shields.io/badge/status-early%20MVP-orange)
 ![Angular](https://img.shields.io/badge/frontend-Angular-red)
