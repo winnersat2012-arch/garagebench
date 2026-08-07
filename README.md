@@ -1,182 +1,152 @@
-﻿# GarageBench
-
+# GarageBench
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 ![Project status](https://img.shields.io/badge/status-early%20MVP-orange)
 ![Angular](https://img.shields.io/badge/frontend-Angular-red)
 ![NestJS](https://img.shields.io/badge/backend-NestJS-red)
 ![PostgreSQL](https://img.shields.io/badge/database-PostgreSQL-blue)
 
-GarageBench is a small, open-source pilot for assisted automotive diagnostics.
+**Open-source, AI-assisted vehicle diagnostics and repair documentation for independent automotive workshops.**
 
-It is built as a monorepo with:
+GarageBench helps technicians record symptoms, diagnostic trouble codes, measurements, hypotheses, tests, and evidence in a transparent workflow. Its AI layer is designed to assist the technician without hiding uncertainty or presenting unsupported conclusions as facts.
 
-- `backend/` -> NestJS API
-- `frontend/` -> Angular app
-- `electron/` -> desktop wrapper and app launcher
-- `docker-compose.yml` -> PostgreSQL for local development
+> GarageBench is an early-stage MVP under active development. It is not a substitute for professional judgement, manufacturer procedures, or verified measurements.
 
-This project includes a first MVP workflow:
+## Why GarageBench?
 
-- Create vehicle and diagnostic case
-- Add symptom + DTC
-- Ask assistant for guidance (missing information + hypotheses + tests + uncertainty)
-- Record tests and results
-- Keep evidence typed by origin (declared, observed, measured, retrieved, inferred)
+Independent workshops often keep diagnostic information split across notes, chat messages, and disconnected tools. This makes it hard to search, audit, compare, and reuse previous work.
 
----
+GarageBench aims to provide an open, reproducible alternative built around:
 
-## 1) First: prerequisites
+- Evidence-first diagnostics rather than opaque answers.
+- Clear provenance for declared, observed, measured, retrieved, and inferred information.
+- Traceable hypotheses and tests throughout each diagnostic case.
+- AI provider abstraction with adapters for a mock provider by default and optional OpenAI/Ollama integration.
+- Privacy-friendly data handling and open collaboration under AGPL-3.0-or-later.
 
-You must use **Node.js 20+** (this repo will fail on old Node versions).
+## Current MVP
 
-Check your versions:
+The initial platform includes:
 
-```powershell
-node -v
-npm -v
+- Vehicle and diagnostic case management.
+- Symptoms, DTC codes, and technical measurements.
+- Diagnostic hypotheses with rationale and estimated confidence.
+- Recommended tests and recorded test results.
+- Evidence tracking per hypothesis.
+- Angular frontend and NestJS REST backend.
+- PostgreSQL persistence through TypeORM.
+- Docker Compose configuration for local PostgreSQL.
+- Initial tests and developer documentation.
+
+## Evidence model
+
+GarageBench separates information by origin so technicians can understand why a conclusion was proposed:
+
+| Evidence type | Meaning |
+| --- | --- |
+| Declared | Information supplied by the customer or technician. |
+| Observed | Directly observed behaviour, damage, sound, or condition. |
+| Measured | Values obtained using instruments or diagnostic equipment. |
+| Retrieved | Information recovered from an authorised technical source. |
+| Inferred | A conclusion proposed from the available evidence. |
+
+The AI assistant must:
+- show uncertainty,
+- ask for missing information,
+- suggest tests,
+- and avoid confirming faults without evidence.
+
+## Requirements
+
+- Node.js 20+
+- Git
+- Docker Desktop (optional, for local PostgreSQL)
+- Windows (to build/use `.exe`), macOS/Linux for source development.
+
+## Repository structure
+
+```text
+garagebench/
+├── backend/   # NestJS API
+├── frontend/  # Angular app
+├── electron/  # Electron shell for desktop packaging
+├── docker-compose.yml
+└── .github/workflows/desktop-release.yml
 ```
 
-If you have an old Node version, install/update it first:
+## Quick start
 
-### Quick install options (Windows)
+1. Clone the repository:
 
-```powershell
-winget install OpenJS.NodeJS.LTS
-```
-
-or using `nvm-windows`:
-
-```powershell
-nvm install 20
-nvm use 20
-```
-
-Then open a new terminal.
-
----
-
-## 2) Clone and first setup
-
-```powershell
+```bash
 git clone https://github.com/winnersat2012-arch/garagebench.git
 cd garagebench
 ```
 
-From now on run each command **on its own line** (not joined together):
+2. Install dependencies:
 
-```powershell
-npm install
+```bash
 npm run bootstrap
 ```
 
-`npm run bootstrap` installs both `backend/` and `frontend/` dependencies.
+3. Start backend + frontend:
 
----
-
-## 3) Run in development mode
-
-Start backend and frontend together:
-
-```powershell
+```bash
 npm run start:all
 ```
 
-This serves:
+4. Optional: start PostgreSQL locally:
 
-- Backend on `http://127.0.0.1:3000`
-- Frontend on `http://127.0.0.1:4200`
-
-Start PostgreSQL locally:
-
-```powershell
+```bash
 docker compose up -d
 ```
 
----
+## Common commands
 
-## 4) Build and create the Windows `.exe`
+```bash
+npm run build:all      # compile backend + frontend
+npm run build          # same as above
+npm run test           # run tests
+npm run lint           # run linters
+npm run start:all      # run web dev mode
+npm run desktop:dev    # run Electron desktop in dev
+npm run desktop:pack   # build Windows installer (release/.exe)
+```
 
-```powershell
+## Desktop (.exe) workflow
+
+### Local packaging
+
+```bash
 npm run build:all
 npm run desktop:pack
 ```
 
-Output is created in:
+The installer is generated under `release/`.
 
-- `release/` (for example `release\\GarageBench Setup X.X.X.exe`)
+### Direct download for users
 
-If you only want a local build package and not publish, we already pass `--publish=never`.
+If you want users to run the app immediately:
+1. Go to **Releases** in this repository.
+2. Download the latest `.exe` installer.
+3. Run it and follow the installer steps.
 
-Optional alias:
+### GitHub release automation
 
-```powershell
-npm run desktop:pack:nsis
-```
+This repository includes an Action workflow that builds and uploads a Windows installer when a tag `v*` is pushed.
 
----
-
-## 5) CI / GitHub release (official download link)
-
-The workflow `.github/workflows/desktop-release.yml` builds a Windows installer automatically when you push a tag:
-
-```powershell
+```bash
 git tag v0.1.0
 git push origin v0.1.0
 ```
 
-After this, create/edit the GitHub Release if you want to expose that `.exe` for users.
+That publishes the new `.exe` in the release assets.
 
----
+## Contributing & branch flow
 
-## 6) Common checks
-
-Check tooling:
-
-```powershell
-npm --prefix frontend exec ng --version
-npm --prefix backend exec tsc --version
-```
-
-Run lint/build/tests:
-
-```powershell
-npm run lint
-npm run test
-npm run build:all
-```
-
----
-
-## 7) Why previous errors happened
-
-Most install/build failures came from running this repo with an old Node runtime (`Node 10.x`):
-
-- `SyntaxError: Unexpected token ??`
-- `tsc` or Electron installer failing with optional chaining parse errors
-
-Root cause: tools require Node 20+.
-
-Run the version check again:
-
-```powershell
-node -v
-```
-
-Expected: something like `v20.x` or newer.
-
----
-
-## 8) Contributing and branch policy
-
-- Work only on branches, never directly on `main`.
-- Use:
-  - `feature/initial-platform` for the MVP branch
-  - Pull requests for review
-
-See `CONTRIBUTING.md`, `AGENTS.md`, and `SECURITY.md`.
-
----
+- Use `feature/initial-platform` for changes.
+- Do not modify `main` directly.
+- Follow `CONTRIBUTING.md` for PR expectations.
 
 ## License
 
-AGPL-3.0-or-later
+AGPL-3.0-or-later.
