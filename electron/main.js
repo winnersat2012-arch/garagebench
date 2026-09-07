@@ -10,7 +10,7 @@ let backendProc = null;
 let frontendProc = null;
 let mainWindow = null;
 const rootPath = path.resolve(__dirname, '..');
-const appPath = isPackaged ? path.join(process.resourcesPath, 'app') : rootPath;
+const appPath = rootPath;
 const backendPath = path.join(appPath, 'backend');
 const frontendPath = path.join(appPath, 'frontend');
 const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
@@ -46,12 +46,10 @@ function startFrontendDev() {
 
 function startBackendProd() {
   const backendMain = path.join(backendPath, 'dist', 'main.js');
-  return spawnService(process.execPath, [backendMain], backendPath, {
-    env: {
-      ELECTRON_RUN_AS_NODE: '1',
-      NODE_ENV: 'production',
-    },
-  });
+  process.env.NODE_ENV = 'production';
+  process.env.GARAGEBENCH_DESKTOP = '1';
+  require(backendMain);
+  return null;
 }
 
 function buildErrorMessage(context) {
@@ -93,18 +91,26 @@ app.whenReady().then(async () => {
   if (isDev) {
     backendProc = startBackendDev();
     frontendProc = startFrontendDev();
-  } else {
-    backendProc = startBackendProd();
-  }
 
-  const backendReady = await waitUntilHealthy(`${baseUrlBackend}/health`, 80);
-  if (!backendReady) {
-    console.error(buildErrorMessage('backend'));
-    app.quit();
-    return;
+    const backendReady = await waitUntilHealthy(`${baseUrlBackend}/health`, 80);
+    if (!backendReady) {
+      console.error(buildErrorMessage('backend'));
+    }
   }
 
   await createWindow();
+
+  if (!isDev) {
+    try {
+      backendProc = startBackendProd();
+      const backendReady = await waitUntilHealthy(`${baseUrlBackend}/health`, 80);
+      if (!backendReady) {
+        console.error(buildErrorMessage('backend'));
+      }
+    } catch (error) {
+      console.error(buildErrorMessage('backend'), error);
+    }
+  }
 
   if (isDev) {
     mainWindow.webContents.openDevTools();
@@ -118,6 +124,6 @@ app.on('window-all-closed', () => {
 });
 
 app.on('will-quit', () => {
-  if (backendProc) backendProc.kill();
+  if (backendProc?.kill) backendProc.kill();
   if (frontendProc) frontendProc.kill();
 });

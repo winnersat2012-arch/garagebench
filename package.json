@@ -38,6 +38,7 @@
       "backend/package.json",
       "backend/src/**/*",
       "backend/tsconfig.json",
+      "backend/node_modules/**/*",
       "frontend/dist/**/*",
       "frontend/package.json",
       "frontend/src/**/*",

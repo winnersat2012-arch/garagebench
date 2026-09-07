@@ -11,5 +11,8 @@ async function bootstrap() {
 
 bootstrap().catch((error) => {
   console.error('Fatal startup error', error);
+  if (process.env.GARAGEBENCH_DESKTOP === '1') {
+    return;
+  }
   process.exit(1);
 });
