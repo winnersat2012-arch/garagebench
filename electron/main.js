@@ -15,11 +15,16 @@ const backendPath = path.join(appPath, 'backend');
 const frontendPath = path.join(appPath, 'frontend');
 const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
-function spawnService(command, args, cwd) {
+function spawnService(command, args, cwd, options = {}) {
   const child = spawn(command, args, {
     cwd,
     stdio: ['ignore', 'pipe', 'pipe'],
-    shell: process.platform === 'win32',
+    shell: options.shell ?? false,
+    env: {
+      ...process.env,
+      ...options.env,
+    },
+    windowsHide: true,
   });
 
   child.stdout.on('data', (data) => console.log(`[${command} ${cwd}]`, data.toString()));
@@ -28,16 +33,25 @@ function spawnService(command, args, cwd) {
 }
 
 function startBackendDev() {
-  return spawnService(npmCmd, ['--prefix', backendPath, 'run', 'start:dev'], rootPath);
+  return spawnService(npmCmd, ['--prefix', backendPath, 'run', 'start:dev'], rootPath, {
+    shell: process.platform === 'win32',
+  });
 }
 
 function startFrontendDev() {
-  return spawnService(npmCmd, ['--prefix', frontendPath, 'start'], rootPath);
+  return spawnService(npmCmd, ['--prefix', frontendPath, 'start'], rootPath, {
+    shell: process.platform === 'win32',
+  });
 }
 
 function startBackendProd() {
   const backendMain = path.join(backendPath, 'dist', 'main.js');
-  return spawnService(process.execPath, [backendMain], backendPath);
+  return spawnService(process.execPath, [backendMain], backendPath, {
+    env: {
+      ELECTRON_RUN_AS_NODE: '1',
+      NODE_ENV: 'production',
+    },
+  });
 }
 
 function buildErrorMessage(context) {
