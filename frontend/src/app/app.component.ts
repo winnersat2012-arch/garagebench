@@ -15,6 +15,50 @@ type AssistResponse = {
   };
 };
 
+type LocalVehicle = {
+  id: string;
+  vin: string;
+  make: string;
+  model: string;
+  year: number;
+};
+
+type LocalSymptom = {
+  description: string;
+  frequency: string;
+  context: string;
+};
+
+type LocalDtc = {
+  code: string;
+  description: string;
+};
+
+type LocalMeasurement = {
+  name: string;
+  value: number;
+  unit: string;
+  note: string;
+};
+
+type LocalTest = {
+  name: string;
+  expectedResult: string;
+  actualResult: string;
+  status: string;
+};
+
+type LocalCase = {
+  id: string;
+  vehicleId: string;
+  caseNumber: string;
+  complaint: string;
+  symptoms: LocalSymptom[];
+  dtcs: LocalDtc[];
+  measurements: LocalMeasurement[];
+  tests: LocalTest[];
+};
+
 @Component({
   selector: 'app-root',
   imports: [CommonModule, FormsModule],
@@ -165,6 +209,8 @@ export class AppComponent {
   assist?: AssistResponse;
   statusMessage = '';
   statusIsError = false;
+  private readonly localVehiclesKey = 'garagebench.localVehicles';
+  private readonly localCasesKey = 'garagebench.localCases';
 
   constructor(private readonly http: HttpClient) {}
 
@@ -178,7 +224,17 @@ export class AppComponent {
           this.casePayload.vehicleId = res.id;
           this.setStatus(`Vehicle created. ID copied into the case form: ${res.id}`);
         },
-        error: (error) => this.handleError('Could not create vehicle', error),
+        error: (error) => {
+          if (this.isBackendUnavailable(error)) {
+            const id = this.createLocalId();
+            this.saveLocalVehicle({ id, ...payload });
+            this.casePayload.vehicleId = id;
+            this.setStatus(`Vehicle created locally. ID copied into the case form: ${id}`);
+            return;
+          }
+
+          this.handleError('Could not create vehicle', error);
+        },
       });
   }
 
@@ -191,7 +247,26 @@ export class AppComponent {
           this.caseId = res.id;
           this.setStatus(`Case created: ${res.id}`);
         },
-        error: (error) => this.handleError('Could not create case', error),
+        error: (error) => {
+          if (this.isBackendUnavailable(error)) {
+            const id = this.createLocalId();
+            this.saveLocalCase({
+              id,
+              vehicleId: this.casePayload.vehicleId,
+              caseNumber: this.casePayload.caseNumber,
+              complaint: this.casePayload.complaint,
+              symptoms: [],
+              dtcs: [],
+              measurements: [],
+              tests: [],
+            });
+            this.caseId = id;
+            this.setStatus(`Case created locally: ${id}`);
+            return;
+          }
+
+          this.handleError('Could not create case', error);
+        },
       });
   }
 
@@ -202,7 +277,15 @@ export class AppComponent {
       .post(`${environment.apiBaseUrl}/cases/${this.caseId}/symptoms`, this.symptom)
       .subscribe({
         next: () => this.setStatus('Symptom added.'),
-        error: (error) => this.handleError('Could not add symptom', error),
+        error: (error) => {
+          if (this.isBackendUnavailable(error)) {
+            this.updateLocalCase('symptoms', this.symptom);
+            this.setStatus('Symptom added locally.');
+            return;
+          }
+
+          this.handleError('Could not add symptom', error);
+        },
       });
   }
 
@@ -213,7 +296,15 @@ export class AppComponent {
       .post(`${environment.apiBaseUrl}/cases/${this.caseId}/dtcs`, this.dtc)
       .subscribe({
         next: () => this.setStatus('DTC added.'),
-        error: (error) => this.handleError('Could not add DTC', error),
+        error: (error) => {
+          if (this.isBackendUnavailable(error)) {
+            this.updateLocalCase('dtcs', this.dtc);
+            this.setStatus('DTC added locally.');
+            return;
+          }
+
+          this.handleError('Could not add DTC', error);
+        },
       });
   }
 
@@ -228,7 +319,15 @@ export class AppComponent {
       .post(`${environment.apiBaseUrl}/cases/${this.caseId}/measurements`, payload)
       .subscribe({
         next: () => this.setStatus('Measurement added.'),
-        error: (error) => this.handleError('Could not add measurement', error),
+        error: (error) => {
+          if (this.isBackendUnavailable(error)) {
+            this.updateLocalCase('measurements', payload);
+            this.setStatus('Measurement added locally.');
+            return;
+          }
+
+          this.handleError('Could not add measurement', error);
+        },
       });
   }
 
@@ -242,7 +341,14 @@ export class AppComponent {
           this.assist = res;
           this.setStatus('Assistant response ready.');
         },
-        error: (error) => this.handleError('Could not get assistant response', error),
+        error: (error) => {
+          if (this.isBackendUnavailable(error)) {
+            this.setStatus('Assistant is not available while the backend is offline.');
+            return;
+          }
+
+          this.handleError('Could not get assistant response', error);
+        },
       });
   }
 
@@ -253,7 +359,15 @@ export class AppComponent {
       .post(`${environment.apiBaseUrl}/cases/${this.caseId}/tests`, this.test)
       .subscribe({
         next: () => this.setStatus('Test registered.'),
-        error: (error) => this.handleError('Could not register test', error),
+        error: (error) => {
+          if (this.isBackendUnavailable(error)) {
+            this.updateLocalCase('tests', this.test);
+            this.setStatus('Test registered locally.');
+            return;
+          }
+
+          this.handleError('Could not register test', error);
+        },
       });
   }
 
@@ -266,5 +380,60 @@ export class AppComponent {
     const detail = error.error?.message ?? error.message ?? 'Unknown error';
     this.statusMessage = `${prefix}: ${detail}`;
     this.statusIsError = true;
+  }
+
+  private isBackendUnavailable(error: HttpErrorResponse) {
+    return error.status === 0;
+  }
+
+  private createLocalId() {
+    return crypto.randomUUID();
+  }
+
+  private saveLocalVehicle(vehicle: LocalVehicle) {
+    const vehicles = this.readLocal<LocalVehicle>(this.localVehiclesKey);
+    vehicles.push(vehicle);
+    this.writeLocal(this.localVehiclesKey, vehicles);
+  }
+
+  private saveLocalCase(diagnosticCase: LocalCase) {
+    const cases = this.readLocal<LocalCase>(this.localCasesKey);
+    cases.push(diagnosticCase);
+    this.writeLocal(this.localCasesKey, cases);
+  }
+
+  private updateLocalCase<K extends 'symptoms' | 'dtcs' | 'measurements' | 'tests'>(
+    key: K,
+    value: LocalCase[K][number],
+  ) {
+    const cases = this.readLocal<LocalCase>(this.localCasesKey);
+    const diagnosticCase = cases.find((item) => item.id === this.caseId);
+    if (!diagnosticCase) return;
+
+    switch (key) {
+      case 'symptoms':
+        diagnosticCase.symptoms.push(value as LocalSymptom);
+        break;
+      case 'dtcs':
+        diagnosticCase.dtcs.push(value as LocalDtc);
+        break;
+      case 'measurements':
+        diagnosticCase.measurements.push(value as LocalMeasurement);
+        break;
+      case 'tests':
+        diagnosticCase.tests.push(value as LocalTest);
+        break;
+    }
+
+    this.writeLocal(this.localCasesKey, cases);
+  }
+
+  private readLocal<T>(key: string): T[] {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T[]) : [];
+  }
+
+  private writeLocal<T>(key: string, value: T[]) {
+    localStorage.setItem(key, JSON.stringify(value));
   }
 }
