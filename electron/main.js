@@ -48,6 +48,7 @@ function startBackendProd() {
   const backendMain = path.join(backendPath, 'dist', 'main.js');
   process.env.NODE_ENV = 'production';
   process.env.GARAGEBENCH_DESKTOP = '1';
+  process.env.GARAGEBENCH_DATABASE = path.join(app.getPath('userData'), 'garagebench.sqlite');
   require(backendMain);
   return null;
 }

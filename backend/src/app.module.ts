@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AiModule } from './common/ai/ai.module';
@@ -14,27 +14,47 @@ import { Hypothesis } from './diagnostics/entities/hypothesis.entity';
 import { DiagnosticTest } from './diagnostics/entities/diagnostic-test.entity';
 import { Evidence } from './diagnostics/entities/evidence.entity';
 
+const entities = [
+  Vehicle,
+  DiagnosticCase,
+  Symptom,
+  DtcCode,
+  Measurement,
+  Hypothesis,
+  DiagnosticTest,
+  Evidence,
+];
+
+function createDatabaseOptions(): TypeOrmModuleOptions {
+  if (process.env.GARAGEBENCH_DESKTOP === '1') {
+    return {
+      type: 'sqljs',
+      location: process.env.GARAGEBENCH_DATABASE ?? 'garagebench.sqlite',
+      autoSave: true,
+      sqlJsConfig: {
+        locateFile: (file: string) => require.resolve(`sql.js/dist/${file}`),
+      },
+      entities,
+      synchronize: true,
+      autoLoadEntities: true,
+    };
+  }
+
+  return {
+    type: 'postgres',
+    url: process.env.DATABASE_URL,
+    entities,
+    synchronize: process.env.DB_SYNC === 'true',
+    autoLoadEntities: true,
+  };
+}
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      url: process.env.DATABASE_URL,
-      entities: [
-        Vehicle,
-        DiagnosticCase,
-        Symptom,
-        DtcCode,
-        Measurement,
-        Hypothesis,
-        DiagnosticTest,
-        Evidence,
-      ],
-      synchronize: process.env.DB_SYNC === 'true',
-      autoLoadEntities: true,
-    }),
+    TypeOrmModule.forRoot(createDatabaseOptions()),
     AiModule,
     DiagnosticsModule,
   ],

@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -54,10 +54,27 @@ type AssistResponse = {
       label {
         font-weight: 600;
       }
+      .status {
+        border: 1px solid #b8d3ff;
+        background: #eef6ff;
+        color: #0f3d73;
+        padding: 10px 12px;
+        border-radius: 8px;
+        margin-bottom: 14px;
+      }
+      .status.error {
+        border-color: #f4b5b5;
+        background: #fff0f0;
+        color: #8a1f1f;
+      }
     `,
   ],
   template: `
     <h1>GarageBench — MVP</h1>
+    <p class="status" [class.error]="statusIsError" *ngIf="statusMessage">
+      {{ statusMessage }}
+    </p>
+
     <section class="panel">
       <h2>1) Create vehicle</h2>
       <label>VIN</label>
@@ -146,62 +163,108 @@ export class AppComponent {
 
   caseId = '';
   assist?: AssistResponse;
+  statusMessage = '';
+  statusIsError = false;
 
   constructor(private readonly http: HttpClient) {}
 
   createVehicle() {
+    this.setStatus('Creating vehicle...');
     const payload = { ...this.vehicle, year: Number(this.vehicle.year) };
     this.http
       .post<{ id: string }>(`${environment.apiBaseUrl}/vehicles`, payload)
-      .subscribe((res) => {
-        this.casePayload.vehicleId = res.id;
+      .subscribe({
+        next: (res) => {
+          this.casePayload.vehicleId = res.id;
+          this.setStatus(`Vehicle created. ID copied into the case form: ${res.id}`);
+        },
+        error: (error) => this.handleError('Could not create vehicle', error),
       });
   }
 
   createCase() {
+    this.setStatus('Creating diagnostic case...');
     this.http
       .post<{ id: string }>(`${environment.apiBaseUrl}/cases`, this.casePayload)
-      .subscribe((res) => {
-        this.caseId = res.id;
+      .subscribe({
+        next: (res) => {
+          this.caseId = res.id;
+          this.setStatus(`Case created: ${res.id}`);
+        },
+        error: (error) => this.handleError('Could not create case', error),
       });
   }
 
   addSymptom() {
     if (!this.caseId) return;
+    this.setStatus('Adding symptom...');
     this.http
       .post(`${environment.apiBaseUrl}/cases/${this.caseId}/symptoms`, this.symptom)
-      .subscribe();
+      .subscribe({
+        next: () => this.setStatus('Symptom added.'),
+        error: (error) => this.handleError('Could not add symptom', error),
+      });
   }
 
   addDtc() {
     if (!this.caseId) return;
+    this.setStatus('Adding DTC...');
     this.http
       .post(`${environment.apiBaseUrl}/cases/${this.caseId}/dtcs`, this.dtc)
-      .subscribe();
+      .subscribe({
+        next: () => this.setStatus('DTC added.'),
+        error: (error) => this.handleError('Could not add DTC', error),
+      });
   }
 
   addMeasurement() {
     if (!this.caseId) return;
+    this.setStatus('Adding measurement...');
     const payload = {
       ...this.measurement,
       value: Number(this.measurement.value),
     };
     this.http
       .post(`${environment.apiBaseUrl}/cases/${this.caseId}/measurements`, payload)
-      .subscribe();
+      .subscribe({
+        next: () => this.setStatus('Measurement added.'),
+        error: (error) => this.handleError('Could not add measurement', error),
+      });
   }
 
   requestAssist() {
     if (!this.caseId) return;
+    this.setStatus('Asking assistant...');
     this.http
       .post<AssistResponse>(`${environment.apiBaseUrl}/cases/${this.caseId}/assist`, {})
-      .subscribe((res) => (this.assist = res));
+      .subscribe({
+        next: (res) => {
+          this.assist = res;
+          this.setStatus('Assistant response ready.');
+        },
+        error: (error) => this.handleError('Could not get assistant response', error),
+      });
   }
 
   addTest() {
     if (!this.caseId) return;
+    this.setStatus('Registering test...');
     this.http
       .post(`${environment.apiBaseUrl}/cases/${this.caseId}/tests`, this.test)
-      .subscribe();
+      .subscribe({
+        next: () => this.setStatus('Test registered.'),
+        error: (error) => this.handleError('Could not register test', error),
+      });
+  }
+
+  private setStatus(message: string) {
+    this.statusMessage = message;
+    this.statusIsError = false;
+  }
+
+  private handleError(prefix: string, error: HttpErrorResponse) {
+    const detail = error.error?.message ?? error.message ?? 'Unknown error';
+    this.statusMessage = `${prefix}: ${detail}`;
+    this.statusIsError = true;
   }
 }
