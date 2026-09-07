@@ -24,16 +24,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
-      - name: Instalar dependencias raíz
-        run: npm ci
+      - name: Instalar dependencias raÃ­z
+        run: npm install
 
       - name: Instalar dependencias de frontend y backend
         run: npm run bootstrap
 
       - name: Compilar y empaquetar app para Windows
-        run: npm run desktop:pack
+        run: npm run desktop:pack:nsis
 
       - name: Subir instalador como artefacto
         uses: actions/upload-artifact@v4

@@ -18,12 +18,13 @@
     "start": "npm --prefix backend run start:dev",
     "start:all": "concurrently \"npm --prefix backend run start:dev\" \"npm --prefix frontend run start\"",
     "desktop:dev": "electron .",
-    "desktop:pack": "npm run build:all && electron-builder --win",
+    "desktop:pack": "npm run build:all && electron-builder --win --x64 --publish=never",
+    "desktop:pack:nsis": "npm run desktop:pack",
     "test": "npm --prefix backend run test && npm --prefix frontend run test",
     "lint": "npm --prefix backend run lint && npm --prefix frontend run lint"
   },
   "devDependencies": {
-    "electron": "^31.4.0",
+    "electron": "31.4.0",
     "electron-builder": "^24.13.3",
     "wait-on": "^8.0.4",
     "concurrently": "^8.2.2"
